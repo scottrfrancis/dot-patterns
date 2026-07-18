@@ -1,0 +1,7 @@
+# generated artifacts (produced by bin/generate.py)
+dist/
+# local scrub/allow/gray list files live in ~/.config, never here
+*.scrublist
+*.allowlist
+*.graylist
+.DS_Store
