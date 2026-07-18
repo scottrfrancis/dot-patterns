@@ -92,10 +92,34 @@ case "$METHOD" in
     cp "$ROOT/README.md" "$ROOT/SCHEMA.md" "$DEST/" 2>/dev/null || true
     echo "    synced. Commit + push the mirror from $DEST." ;;
   bundle)
-    echo "==> self-extracting one-way bundle (field-kit self-extractor)"
-    echo "    staged payload: $STAGE"
-    echo "    FIELD_KIT_SCRUBLIST=$SCRUBLIST /Volumes/workspace/dot-copilot/bin/make-field-bundle.sh"
-    echo "    → .ps1 (see the self-extracting-release-over-narrow-channel pattern)."
-    echo "    NOTE: increment-1 — generalizing the bundler to an arbitrary payload dir is the next build." ;;
+    # Materialize a Copilot-installable pattern payload (the air-gapped target can't fetch
+    # submodules or reach kb-mcp): generated instructions/prompts + raw SKILL.md corpus +
+    # INDEX. Accepted mixin skills are materialized from the submodule.
+    PP="$(mktemp -d "${TMPDIR:-/tmp}/patterns-payload.XXXXXX")"
+    mkdir -p "$PP/copilot" "$PP/corpus"
+    cp -R "$ROOT/dist/$VIS/copilot/." "$PP/copilot/" 2>/dev/null || true
+    cp "$ROOT/dist/$VIS/INDEX.md" "$PP/INDEX.md" 2>/dev/null || true
+    ( cd "$ROOT" && find base/patterns -name 'SKILL.md' -o -name 'INDEX.md' ) | while read -r f; do
+      mkdir -p "$PP/corpus/$(dirname "$f")"; cp "$ROOT/$f" "$PP/corpus/$f"; done
+    python3 - "$ROOT" "$PP" <<'PY'
+import sys, os, shutil
+sys.path.insert(0, os.path.join(sys.argv[1], "bin")); import generate as g
+for sk in g._mixin_accepted():
+    d = os.path.join(sys.argv[2], "corpus", "base", "mixins",
+                     sk["fm"]["source"].split(":")[1], sk["fm"]["name"])
+    os.makedirs(d, exist_ok=True); shutil.copy(sk["path"], os.path.join(d, "SKILL.md"))
+PY
+    cp "$ROOT/VERSION" "$PP/VERSION" 2>/dev/null || true
+    printf '# Pattern library (offline snapshot)\n\nInstall copilot/instructions + copilot/prompts into .github/ (same as the field kit).\nBrowse corpus/ for the raw SKILL.md source. Live library: kb-mcp on the LAN + github.com/scottrfrancis/dot-patterns.\n' > "$PP/PATTERNS.md"
+
+    if [ -n "${FIELD_KIT_BUNDLER:-}" ] && [ -f "$FIELD_KIT_BUNDLER" ]; then
+      echo "==> combined self-extracting bundle: field kit + pattern library"
+      FIELD_KIT_SCRUBLIST="$SCRUBLIST" PATTERNS_PAYLOAD="$PP" bash "$FIELD_KIT_BUNDLER"
+    else
+      echo "==> pattern-only payload staged at $PP"
+      echo "    (set FIELD_KIT_BUNDLER in the profile to fold in the Copilot field kit,"
+      echo "     or package $PP with your own self-extractor.)"
+    fi
+    rm -rf "$PP" ;;
   *) echo "release: unknown METHOD '$METHOD'" >&2; exit 2 ;;
 esac
