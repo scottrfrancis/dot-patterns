@@ -9,3 +9,7 @@ dist/
 # private per-profile overlays — never commit (leak-averse default)
 overlays/*
 !overlays/README.md
+
+# python bytecode
+__pycache__/
+*.pyc
