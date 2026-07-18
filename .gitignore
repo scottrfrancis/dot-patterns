@@ -5,3 +5,7 @@ dist/
 *.allowlist
 *.graylist
 .DS_Store
+
+# private per-profile overlays — never commit (leak-averse default)
+overlays/*
+!overlays/README.md

@@ -29,7 +29,7 @@ status: active                           # active | experimental | deprecated
 related: [defense-in-depth]              # ids of related patterns
 supersedes: null
 superseded-by: null
-visibility: public                       # public | home | ey | xom  (drives publish/bundle)
+visibility: public                       # public | <profile-handle>  (drives release fan-out)
 ---
 
 <markdown body>
@@ -55,7 +55,8 @@ Keep it a decision-grade pattern doc, not a tutorial:
 - **Don't re-document what the model knows.** GoF patterns live as a single indexed file
   (`gof/INDEX.md`) — name + intent + *your stance* — not 23 tutorials. Personal patterns
   and mixin deltas get full `SKILL.md` entries.
-- **`visibility`** gates fan-out: `public` publishes to the mirror; `home`/`ey`/`xom` stay
-  in their overlay and travel only to that environment.
+- **`visibility`** gates fan-out: `public` publishes to the mirror; a generic profile
+  handle keeps the entry in that overlay, travelling only to that profile's target. Never
+  use a real target name as a visibility value — use the generic handle.
 - **Mixin entries** must set `source`, `license`, `origin-url`. Reconcile before adding
   (see any `mixins/<src>/MANIFEST.md`).

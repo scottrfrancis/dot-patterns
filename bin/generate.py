@@ -9,7 +9,7 @@ plus INDEX.md — a flat retrieval index (name · trigger · category · invocat
 for humans, and as a kb-mcp search surface.
 
     generate.py                 # generate public corpus → dist/
-    generate.py --visibility ey # include overlays/ey (for the EY package)
+    generate.py --visibility <handle>  # include overlays/<handle> (for that profile's release)
     generate.py --self-test
 
 stdlib only; Python 3.11-compatible.

@@ -43,7 +43,7 @@ would duplicate:
 
 - The four accepted entries here capture the **delta** (what each adds over base) with
   attribution; the canonical full text is upstream (install via `/plugin install` or
-  `skills.sh`). Verbatim vendoring (for the air-gapped XOM path) is a follow-up — pin the
+  `skills.sh`). Verbatim vendoring (for the air-gapped one-way path) is a follow-up — pin the
   commit and copy the real `SKILL.md` bodies then.
 - One gray remains: `systematic-debugging`. Left unpromoted pending a decision on whether
   base should own a debugging discipline.

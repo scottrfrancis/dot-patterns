@@ -41,43 +41,48 @@ This library is *methodology* served under the same doctrine as the ops-knowledg
 **dynamic + archival, local-first, WAN-tolerant.** Connectivity decreases down a diode
 chain; a scrub gate sits at every outbound hop.
 
+Concrete targets are never named in this repo — each is a generic **release profile**
+(`bin/release.sh --profile <handle>`) whose real specifics live in local, uncommitted
+config. The three connectivity tiers:
+
 ```
-  LAN HUB (Studio/Hasami/dev/dev-ai/razer14)      live query + shared git
-    corpus on NAS + kb-mcp serving (mini)
-        │  publish ─[scrub: public profile]─►
+  TIER 1 — LAN HUB (all LAN hosts)                 live query + shared git
+    corpus on NAS + kb-mcp serving
+        │  release --profile public ─[scrub: public]─►
         ▼
-  PUBLIC GitHub mirror (base only, scrubbed)       anonymous clone + skills.sh
-        │  clone/pull
+  PUBLIC GitHub mirror (base only, scrubbed)        anonymous clone + skills.sh
+        │  clone / pull
         ▼
-  EY laptop (read-mostly; local overlay)           current-ish; contribute LATERALLY
-        │  release package ─[scrub: xom profile]─►
+  TIER 2 — off-LAN, clone-capable target(s)         current-ish; contribute LATERALLY
+        │  release --profile <handle> ─[scrub: <handle>]─►
         ▼
-  XOM laptop (one-way sink; field-kit .ps1 bundle) snapshot; idempotent install
+  TIER 3 — off-LAN, one-way sink(s)                 snapshot; idempotent install
+           (field-kit self-extracting .ps1 bundle)
 ```
 
-| Env | Access | Freshness | Write-back |
+| Tier | Access | Freshness | Write-back |
 |---|---|---|---|
-| **LAN** | kb-mcp live + shared git on NAS | always current | direct, all hosts |
-| **EY** | clone public mirror + `skills.sh` install | pull on demand (freshness stamp) | local only → lateral package to teammates |
-| **XOM** | emailed `.ps1` release bundle | snapshot (version stamp) | effectively none |
+| **1 — LAN** | kb-mcp live + shared git on NAS | always current | direct, all hosts |
+| **2 — clone target** | clone public mirror + `skills.sh` install | pull on demand (freshness stamp) | local only → lateral package to teammates |
+| **3 — one-way sink** | emailed `.ps1` release bundle | snapshot (version stamp) | effectively none |
 
-Live MCP serving is LAN-only; off-LAN gets static (EY) or bundled (XOM). Most of the
-machinery already exists: kb-mcp (LAN), `skills.sh` (EY, SKILL.md standard), and the
-field-kit `make-field-bundle.sh` self-extracting bundle (XOM).
+Live MCP serving is LAN-only; off-LAN gets static (Tier 2) or bundled (Tier 3). Most of the
+machinery already exists: kb-mcp (LAN), `skills.sh` (Tier 2, SKILL.md standard), and the
+field-kit `make-field-bundle.sh` self-extracting bundle (Tier 3).
 
 ## Visibility partition (because it fans out to a public mirror)
 
 ```
 base/        ← public-safe: your patterns + MIT/CC0 mixins (attribution). PUBLISHES.
 overlays/
-  home/      ← LAN-only (homelab/ops-adjacent)
-  ey/        ← EY engagement patterns — never public; shareable to EY teammates only
-  xom/       ← XOM-specific — travels only in the XOM bundle
+  <handle>/  ← private, per-profile layers — generic handles only, git-ignored,
+             ←   never public. Composed onto base at release time for that profile.
 ```
 
-Publish/bundle steps compose `base` + the destination's *permitted* overlay through that
-destination's **scrub profile** (`scrublist.public`, `.ey`, `.xom`) — the data-diode
-gate, one profile per boundary.
+`bin/release.sh --profile <handle>` composes `base` + that profile's *permitted* overlay
+through that profile's **scrub list** (`~/.config/patterns/scrublist.<handle>`) — the
+data-diode gate, one profile per boundary. **No real target name appears in this repo;**
+the handle is generic and its real specifics live in local, uncommitted config.
 
 ## Making agents actually use it (three reinforcing layers)
 
@@ -93,10 +98,9 @@ gate, one profile per boundary.
 
 | Script | Does |
 |---|---|
-| `bin/reconcile.py` | Compare a mixin source against the base index → accept/suppress/gray (black/white/gray) |
-| `bin/generate.py` | Corpus → per-tool artifacts (Cursor `.mdc`, Copilot `.instructions`/`.prompt`); SKILL.md-native tools use `skills.sh` |
-| `bin/publish.sh` | `base` → public mirror through `scrublist.public` (dry-run first) |
-| `bin/bundle-xom.sh` | `base + overlays/xom` → self-extracting `.ps1` (reuses field-kit) |
+| `bin/generate.py` | Corpus → per-tool artifacts (Cursor `.mdc`, Copilot `.instructions`/`.prompt`) + INDEX; SKILL.md-native tools use `skills.sh` |
+| `bin/release.sh --profile <handle>` | Deliver to any target by generic profile: composes base + overlay, runs the profile's scrub gate, delivers via `sync` (git mirror) or `bundle` (self-extracting `.ps1`). Dry-run by default. |
+| `bin/profiles.example.conf` | Template for a local profile conf (`~/.config/patterns/profiles/<handle>.conf`) |
 
 ## Status
 
