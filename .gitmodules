@@ -1,0 +1,3 @@
+[submodule "base/mixins/superpowers"]
+	path = base/mixins/superpowers
+	url = https://github.com/obra/superpowers

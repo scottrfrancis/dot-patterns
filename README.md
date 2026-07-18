@@ -25,9 +25,20 @@ distilled knowledge to agents in every environment.
      partial overlap         → GRAY → you merge or keep-the-delta
 ```
 
-Mixins are **vendored, namespaced, provenance-tagged, and reconciled** — never
-blind-copied. Only the *delta over what your base (and the model) already know* is served.
-Base always wins on conflict.
+Mixins are added as **git submodules** (never forked/copied), namespaced, and reconciled.
+Each `base/mixins/<name>.reconcile.md` pins the upstream commit + license and lists which
+of its skills to **accept** (materialized into the corpus) vs **suppress** (base already
+covers). Only accepted skills flow through the generator — the raw submodule (with its
+suppressed skills) is never served. Base always wins on conflict; upstream attribution and
+LICENSE travel in the submodule.
+
+```
+base/mixins/superpowers/            ← git submodule (obra/superpowers @ pinned commit, MIT)
+base/mixins/superpowers.reconcile.md ← provenance + accept/suppress lists (the reconcile record)
+```
+
+Update a mixin: `git submodule update --remote base/mixins/<name>`, re-verify the accept
+list resolves, bump `pinned:` in the reconcile record.
 
 ## Entry format — SKILL.md (the Agent-Skills standard) + extended frontmatter
 

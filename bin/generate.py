@@ -45,12 +45,47 @@ def parse_skill(path):
     return {"fm": fm, "body": body.lstrip("\n"), "path": path}
 
 
+def _mixin_accepted():
+    """Yield accepted mixin skills from submodules, per each *.reconcile.md accept list.
+
+    Only accepted skills are materialized; suppressed upstream skills never enter the
+    corpus. The submodule is the vendored source of truth (no forking)."""
+    for rec_path in sorted(glob.glob(os.path.join(ROOT, "base", "mixins", "*.reconcile.md"))):
+        rec = parse_skill(rec_path)
+        if not rec:
+            continue
+        sub = rec["fm"].get("submodule")
+        lic = rec["fm"].get("license")
+        origin = rec["fm"].get("origin")
+        accept = rec["fm"].get("accept", "")
+        names = [n.strip() for n in accept.strip("[]").split(",") if n.strip()]
+        sub_root = os.path.join(ROOT, "base", "mixins", sub or "")
+        for name in names:
+            hits = glob.glob(os.path.join(sub_root, "**", name, "SKILL.md"), recursive=True)
+            if not hits:
+                print(f"  WARN: accepted mixin skill '{name}' not found in submodule {sub}",
+                      file=sys.stderr)
+                continue
+            sk = parse_skill(hits[0])
+            if not sk:
+                continue
+            sk["fm"]["source"] = f"mixin:{sub}"
+            sk["fm"].setdefault("license", lic)
+            sk["fm"].setdefault("origin-url", origin)
+            sk["fm"].setdefault("visibility", "public")
+            sk["fm"].setdefault("category", "agent-orchestration")
+            yield sk
+
+
 def iter_skills(visibility):
-    """All SKILL.md whose visibility is allowed (public always; +overlay if requested)."""
+    """All SKILL.md whose visibility is allowed (public always; +overlay if requested).
+
+    base/mixins/<submodule>/ is NOT globbed directly — the raw submodule holds suppressed
+    skills too; only accepted ones flow in via _mixin_accepted()."""
     allowed = {"public"}
     if visibility and visibility != "public":
         allowed.add(visibility)
-    roots = [os.path.join(ROOT, "base")]
+    roots = [os.path.join(ROOT, "base", "patterns")]
     if visibility and visibility != "public":
         roots.append(os.path.join(ROOT, "overlays", visibility))
     for r in roots:
@@ -58,6 +93,7 @@ def iter_skills(visibility):
             sk = parse_skill(path)
             if sk and sk["fm"].get("visibility", "public") in allowed:
                 yield sk
+    yield from _mixin_accepted()
     # gof INDEX.md (not a SKILL dir) also counts as a public entry
     gof = os.path.join(ROOT, "base", "patterns", "gof", "INDEX.md")
     if os.path.exists(gof):
