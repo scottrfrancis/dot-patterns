@@ -95,7 +95,11 @@ Independently arrived at three times before being named here — worth checking 
   InfluxDB series as bronze (untouched, HA-owned) → a nearest-centroid classifier as
   silver, writing person-tagged points into the existing `health_metric` schema. Notable
   variant: silver here is a *disaggregation* (one bronze source → multiple identity-tagged
-  outputs), not just a summary.
+  outputs), not just a summary. **Live since 2026-08-13** — real backfill run against
+  production (294 bronze points, 0 unclassified), daily incremental cron installed. Also a
+  live example of "test the classifier, not just the I/O": a live dry-run caught a real bug
+  (fixed-position CSV field parsing broke against InfluxDB's default column set) that 28
+  passing unit tests against a narrower fixture shape hadn't caught.
 - **`beaufort`/flightplan**: `bronze.time_entry`/`task_raw` → `tools/silver_etl`.
 
 ## Anti-patterns / when NOT
