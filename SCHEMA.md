@@ -26,7 +26,10 @@ license: null                            # mixin entries carry their license + o
 origin-url: null                         # provenance for vendored mixins (attribution)
 stance: null                             # GoF entries: favored | avoided | adapted (+ why)
 status: active                           # active | experimental | deprecated
-related: [defense-in-depth]              # ids of related patterns
+related: [defense-in-depth]              # ids of related patterns IN THIS LIBRARY
+builds-on: [zero-trust]                  # canonical names of PUBLISHED patterns this is a
+                                         #   variant of (kebab-case, flat list); cite each
+                                         #   in the body's "Prior art" section
 supersedes: null
 superseded-by: null
 visibility: public                       # public | <profile-handle>  (drives release fan-out)
@@ -44,6 +47,10 @@ Keep it a decision-grade pattern doc, not a tutorial:
 3. **House adaptation** — *your* specific take (this is the value the model doesn't have).
 4. **Reference instantiation** — where it's used in your work (link out).
 5. **Anti-patterns / when NOT** — where it's the wrong tool.
+6. **Prior art** (when `builds-on` is set): one entry per published pattern. Give its
+   canonical name, where it is published (book or catalogue, with chapter or URL), and one
+   line on what this entry takes from it and where it departs. The departure is the point:
+   it is what a future reader needs when the textbook version and ours disagree.
 
 ## Conventions
 
@@ -58,5 +65,10 @@ Keep it a decision-grade pattern doc, not a tutorial:
 - **`visibility`** gates fan-out: `public` publishes to the mirror; a generic profile
   handle keeps the entry in that overlay, travelling only to that profile's target. Never
   use a real target name as a visibility value — use the generic handle.
+- **`related` vs `builds-on` vs `origin-url`.** `related` links to entries in this library.
+  `builds-on` names published patterns an entry adapts, so a search for the textbook name
+  finds the house version; also add those names to `aliases` or `triggers`. `origin-url`
+  is only for vendored mixins. Keep URLs and bibliographic detail in the body: the
+  generator's frontmatter parser reads flat values and lists only.
 - **Mixin entries** must set `source`, `license`, `origin-url`. Reconcile before adding
   (see any `mixins/<src>/MANIFEST.md`).
