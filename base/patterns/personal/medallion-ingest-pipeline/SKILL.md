@@ -66,10 +66,18 @@ a saga.
 - **Watermark tracking, not a queue.** A nullable timestamp column, a small state file
   next to the script (`.foo-state`), or "rows where derived_at is null" are all fine — the
   point is a cheap, inspectable backlog query per stage, not a message broker.
-- **Trigger mechanism defaults to sequential-in-process within one cron/job run** (bronze,
-  then silver, then gold, each in its own try/except) unless there's a specific reason for
-  separate schedules per stage — separate crons mean more moving parts and let stages
-  drift apart in time for no benefit at typical personal/homelab data volumes.
+- **Consumers read gold and nothing upstream of it.** A report, page, or agent never runs a
+  promotion, never writes gold, and never computes an aggregate on the way to rendering it.
+  When gold is stale, the consumer says how stale and carries on. Gold lives in a store, not
+  in a file inside the consumer's output tree, so a failed promotion leaves the last good data
+  in place and the consumer's commit history carries only what the consumer produced.
+- **Trigger mechanism follows the cadence of the data.** Stages of one source with the same
+  cadence default to sequential-in-process within one cron/job run (bronze, then silver, then
+  gold, each in its own try/except); separate crons there mean more moving parts and let stages
+  drift apart in time for no benefit at typical personal/homelab data volumes. Run a promotion
+  as its own job when its source and its consumers keep different schedules, or when several
+  consumers read the result. Self-healing makes this safe: each stage catches up on its next
+  run, and no orchestrator is needed.
 - **Classification/derivation logic that has real branching (not just a reshape) earns
   its own tests**, split from the I/O glue — a disaggregation classifier, a TSS-strategy
   selector, anything with edge cases benefits from being independently testable without
@@ -104,6 +112,10 @@ Independently arrived at three times before being named here — worth checking 
 
 ## Anti-patterns / when NOT
 
+- **An aggregation step inside the job that renders the report.** It looks like a gold stage
+  and has the shape of one, but the report now owns the promotion: the consumer's schedule
+  sets the data's cadence, its failure modes reach the data, and a second consumer has to run
+  the step again or read the first consumer's output.
 - **A one-off, human-invoked instrument to settle a specific debate** ("did the model get
   slower?") doesn't need bronze/silver rigor — see `stand-up-the-instrument` for that
   lighter shape (ingest → normalize → classify → summary, no durability/self-healing
