@@ -92,7 +92,7 @@ a saga.
 
 ## Reference instantiation
 
-Independently arrived at three times before being named here — worth checking this file
+Arrived at independently three times before being named here, and applied since — worth checking this file
 *before* the fourth time, not after:
 
 - **`dynamic-training-calendar`/fit-processor** (ADR-0008, ADR-0009): sources (Garmin,
@@ -108,6 +108,9 @@ Independently arrived at three times before being named here — worth checking 
   live example of "test the classifier, not just the I/O": a live dry-run caught a real bug
   (fixed-position CSV field parsing broke against InfluxDB's default column set) that 28
   passing unit tests against a narrower fixture shape hadn't caught.
+- **`dynamic-training-calendar`/fit-processor** (ADR-0018): the same scale's silver → Postgres
+  gold (`body_weight_daily`), promoted on its own cron and read by the status page. The first
+  instance of the consumer boundary: an earlier version aggregated inside the report's job.
 - **`beaufort`/flightplan**: `bronze.time_entry`/`task_raw` → `tools/silver_etl`.
 
 ## Anti-patterns / when NOT
